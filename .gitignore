@@ -1,0 +1,6 @@
+# Secret credentials
+S3_secrets.h
+
+# Arduino build artifacts
+*.ino.bin
+*.elf
