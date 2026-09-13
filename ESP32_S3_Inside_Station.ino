@@ -284,6 +284,24 @@ void setup() {
   server.begin();
 }
 
+void updateNextUploadTime()
+{
+    int hh = timeStr.substring(0, 2).toInt();
+    int mm = timeStr.substring(3, 5).toInt();
+    int ss = timeStr.substring(6, 8).toInt();
+
+    mm += 5;
+
+    if (mm >= 60) {
+        mm -= 60;
+        hh += 1;
+    }
+
+    if (hh >= 24) hh = 0;
+
+    nextUploadTime = pad2(hh) + ":" + pad2(mm) + ":" + pad2(ss);
+}
+
 void loop() {
 
   // Read UART first
@@ -315,6 +333,7 @@ void loop() {
       uploadToWU();
       lastWU = millis();
       firstUploadDone = true;
+      updateNextUploadTime();
   }
 
   // Handle web requests
@@ -324,20 +343,7 @@ void loop() {
   if (haveValidData && millis() - lastWU > 300000) {  // 300000 ms = 5 minutes
       uploadToWU();
       lastWU = millis();
-
-      // ---- Compute next upload time (5 minutes later) ----
-      int hh = timeStr.substring(0, 2).toInt();
-      int mm = timeStr.substring(3, 5).toInt();
-      int ss = timeStr.substring(6, 8).toInt();
-
-      mm += 5;
-      if (mm >= 60) {
-          mm -= 60;
-          hh += 1;
-      }
-      if (hh >= 24) hh = 0;
-
-      nextUploadTime = pad2(hh) + ":" + pad2(mm) + ":" + pad2(ss);
+      updateNextUploadTime();
   }
 
   // Heartbeat
