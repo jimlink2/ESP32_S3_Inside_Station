@@ -18,6 +18,10 @@ String timeStr = "";
 float windspeedmph = 0.0;
 float windgustmph = 0.0;
 int winddir = 0;
+float windDirSumX = 0.0;
+float windDirSumY = 0.0;
+uint16_t windDirSamples = 0;
+int avgWindDirDeg = 0;
 float rainin = 0.0;
 float rainRate = 0.0;
 float dailyrainin = 0.0;
@@ -125,6 +129,10 @@ void parseWeather(String line) {
   // WIND DIR
   if (wdPos >= 0) {
       winddir = line.substring(wdPos + 8, line.indexOf(",", wdPos)).toInt();
+      float dirRadians = radians(winddir);
+      windDirSumX += cos(dirRadians);
+      windDirSumY += sin(dirRadians);
+      windDirSamples++;
   } else {
       winddir = 0;         // fallback
   }
@@ -156,6 +164,18 @@ void uploadToWU() {
 
   bool suppress = suppressingTemp;
 
+  int avgWindDirDeg = winddir;   // fallback
+
+    if (windDirSamples > 0)
+    {
+        float avgRadians = atan2(windDirSumY, windDirSumX);
+
+        avgWindDirDeg = (int)(degrees(avgRadians) + 0.5);
+
+        if (avgWindDirDeg < 0)
+            avgWindDirDeg += 360;
+    }
+
   String url = "GET /weatherstation/updateweatherstation.php?";
   url += WU_ID_TXT;
   url += "&";
@@ -172,7 +192,7 @@ void uploadToWU() {
 
   url += "&windspeedmph=" + String(windspeedmph, 1);
   url += "&windgustmph=" + String(windgustmph, 1);
-  url += "&winddir=" + String(winddir);
+  url += "&winddir=" + String(avgWindDirDeg);
   url += "&rainin=" + String(rainRate, 2);
   url += "&dailyrainin=" + String(dailyrainin, 2);
 
@@ -181,14 +201,26 @@ void uploadToWU() {
   url += "Connection: close\r\n\r\n";
 
   WiFiClient client;
+  bool uploadAttempted = false;
+
   if (client.connect("weatherstation.wunderground.com", 80)) {
-    client.print(url);
+      client.print(url);
+      uploadAttempted = true;
+  }
+  Serial.println();
+  Serial.print("Wind samples averaged: ");
+  Serial.println(windDirSamples);
+
+  if (uploadAttempted)
+  {
+      windDirSumX = 0.0;
+      windDirSumY = 0.0;
+      windDirSamples = 0;
   }
 
   Serial.print("WU Upload (temp ");
   Serial.print(suppress ? "SUPPRESSED" : "SENT");
   Serial.println(")");
-
   Serial.print(url);
 }
 
