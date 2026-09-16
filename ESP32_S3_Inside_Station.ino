@@ -69,6 +69,10 @@ void parseWeather(String line) {
   }
 
   temp  = line.substring(tPos + 5, line.indexOf(",", tPos)).toFloat();
+  // During suppressing hours, REDUCE the temp by 2%...
+  if (suppressingTemp) {
+      temp = temp * 0.98;
+  }
   hum   = line.substring(hPos + 4, line.indexOf(",", hPos)).toFloat();
   press = line.substring(pPos + 6, line.indexOf(",", pPos)).toFloat();
   tmin  = line.substring(nPos + 5, line.indexOf(",", nPos)).toFloat();
@@ -182,9 +186,10 @@ void uploadToWU() {
   url += WU_PWD_TXT;
   url += "&dateutc=now";
 
-  if (!suppress) {
-    url += "&tempf=" + String(temp, 1);
-  }
+  //if (!suppress) {
+  // No longer suppressing the temp.  We'll reduce it by 2% during suppression hours, above
+  url += "&tempf=" + String(temp, 1);
+  //}
 
   url += "&humidity=" + String(hum, 0);
   url += "&dewptf=" + String(dewpt, 1);
@@ -219,7 +224,7 @@ void uploadToWU() {
   }
 
   Serial.print("WU Upload (temp ");
-  Serial.print(suppress ? "SUPPRESSED" : "SENT");
+  //Serial.print(suppress ? "SUPPRESSED" : "SENT");
   Serial.println(")");
   Serial.print(url);
 }
@@ -265,8 +270,10 @@ void setup() {
     page += "<div class='card'><div class='label'>Temperature</div>";
     page += "<div class='value'>" + String(temp, 1) + " &deg;F</div>";
 
+    // No longer suppress the temp.  We'll REPORT it during suppression hours, but REDUCE it by 2% and add a '*'...
     if (suppress) {
-        page += "<div style='font-size:20px; color:#c00; margin-top:2px;'>TEMP UPLOAD SUPPRESSED</div>";
+        //page += "<div style='font-size:20px; color:#c00; margin-top:2px;'>TEMP UPLOAD SUPPRESSED</div>";
+        page += "<div style='font-size:20px; color:#090; margin-top:2px;'>TEMP UPLOAD ACTIVE *</div>";
     } else {
         page += "<div style='font-size:20px; color:#090; margin-top:2px;'>TEMP UPLOAD ACTIVE</div>";
     }
