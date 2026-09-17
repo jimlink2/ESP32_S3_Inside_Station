@@ -168,7 +168,7 @@ void uploadToWU() {
 
   bool suppress = suppressingTemp;
 
-  int avgWindDirDeg = winddir;   // fallback
+  avgWindDirDeg = winddir;   // fallback
 
     if (windDirSamples > 0)
     {
