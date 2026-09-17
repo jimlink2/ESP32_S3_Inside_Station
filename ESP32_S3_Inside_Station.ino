@@ -35,6 +35,13 @@ String WIFI_IP = "";
 String nextUploadTime = "Unknown";
 String rainMessage = "";
 
+const int suppressStartHour = 16;
+const int suppressStartMinute = 0;
+const int suppressEndHour = 19;
+const int suppressEndMinute = 0;
+
+float tempAdjFactor = 1.0;
+
 bool suppressingTemp = false;   // MEGA controls suppression
 bool haveValidData = false;
 bool firstUploadDone = false;
@@ -68,11 +75,33 @@ void parseWeather(String line) {
       suppressingTemp = line.substring(sPos + 5).toInt() == 1;
   }
 
+
+  // ----- TIME -----
+  String rawTime = line.substring(timePos + 5);  // "7:3:9"
+  int first = rawTime.indexOf(':');
+  int second = rawTime.indexOf(':', first + 1);
+
+  int hh = rawTime.substring(0, first).toInt();
+  int mm = rawTime.substring(first + 1, second).toInt();
+  int ss = rawTime.substring(second + 1).toInt();
+
+  timeStr = pad2(hh) + ":" + pad2(mm) + ":" + pad2(ss);
+
   temp  = line.substring(tPos + 5, line.indexOf(",", tPos)).toFloat();
-  // During suppressing hours, REDUCE the temp by 2%...
+  // During suppressing hours, REDUCE the temp by tempAdjFactor...
   if (suppressingTemp) {
-      temp = temp * 0.98;
+    if (hh - suppressStartHour == 2) {
+        tempAdjFactor = 0.98;
+    } else if (hh - suppressStartHour == 1) {
+        tempAdjFactor = 0.99;
+    } else {
+        tempAdjFactor = 0.995;
+    }
+  } else {
+    tempAdjFactor = 1.0;
   }
+  temp = temp * tempAdjFactor;
+
   hum   = line.substring(hPos + 4, line.indexOf(",", hPos)).toFloat();
   press = line.substring(pPos + 6, line.indexOf(",", pPos)).toFloat();
   tmin  = line.substring(nPos + 5, line.indexOf(",", nPos)).toFloat();
@@ -102,17 +131,6 @@ void parseWeather(String line) {
   else {
       rainMessage = "Extreme moisture — heavy rain or storms likely.";
   }
-
-  // ----- TIME -----
-  String rawTime = line.substring(timePos + 5);  // "7:3:9"
-  int first = rawTime.indexOf(':');
-  int second = rawTime.indexOf(':', first + 1);
-
-  int hh = rawTime.substring(0, first).toInt();
-  int mm = rawTime.substring(first + 1, second).toInt();
-  int ss = rawTime.substring(second + 1).toInt();
-
-  timeStr = pad2(hh) + ":" + pad2(mm) + ":" + pad2(ss);
 
   // ----- WIND & RAIN -----
 
