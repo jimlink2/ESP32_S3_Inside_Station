@@ -260,7 +260,7 @@ void setup() {
     page += "body { font-family: Arial; background:#f0f0f0; padding:20px; }";
     page += ".card { background:white; padding:20px; margin-bottom:20px; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.2); }";
     page += ".label { font-size:20px; color:#00C; font-weight:bold; }";
-    page += ".noemph { font-size:20px; color:black; }";
+    page += ".noemph { font-size:20px; color:black; font-weight:normal; }";
     page += ".value { font-size:40px; font-weight:bold; }";
     page += "</style>";
     page += "</head><body>";
@@ -294,7 +294,7 @@ void setup() {
 
     page += "<div class='card'>";
     page += "<div class='label'>Wind</div>";
-    page += "<div class='value'>" + String(winddir) + "° at " + String(windspeedmph, 1) + " mph</div>";
+    page += "<div class='value'>" + String(winddir) + "° at " + String(windspeedmph, 1) + " mph&nbsp;&nbsp;&nbsp;<span class='noemph'>Last reported avg direction: " + String(avgWindDirDeg) + "</span></div>";
     page += String("<div class='noemph'>Gust ") + String(windgustmph, 1) + " mph</div>";
     page += "</div>";
 
