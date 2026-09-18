@@ -151,16 +151,21 @@ void parseWeather(String line) {
       windgustmph = 0.0;   // fallback
   }
 
-  // WIND DIR
-  if (wdPos >= 0) {
-      winddir = line.substring(wdPos + 8, line.indexOf(",", wdPos)).toInt();
-      float dirRadians = radians(winddir);
-      windDirSumX += cos(dirRadians);
-      windDirSumY += sin(dirRadians);
-      windDirSamples++;
-  } else {
-      winddir = 0;         // fallback
-  }
+    // WIND DIR
+    if (wdPos >= 0) {
+        winddir = line.substring(wdPos + 8,
+                                line.indexOf(",", wdPos)).toInt();
+
+        float dirRadians = radians(winddir);
+
+        windDirSumX += windspeedmph * cos(dirRadians);
+        windDirSumY += windspeedmph * sin(dirRadians);
+
+        windDirSamples++;
+    }
+    else {
+        winddir = 0;
+    }
 
   // RAIN TOTAL
   if (rPos >= 0) {
