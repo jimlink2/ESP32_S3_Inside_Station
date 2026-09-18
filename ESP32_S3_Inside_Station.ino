@@ -106,12 +106,12 @@ void parseWeather(String line) {
             (float)(nowMin - startMin) /
             (float)(endMin - startMin);
 
-        // Maximum reduction is 1.5%
-        float peakReduction = 0.015;
+        // Maximum reduction
+        float peakReduction = 0.03;
 
         // Creates a smooth hump:
         // start = 0%
-        // middle = 1.5%
+        // middle = peak reduction
         // end = 0%
         float reduction =
             peakReduction * sin(progress * PI);
