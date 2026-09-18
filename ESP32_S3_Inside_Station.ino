@@ -9,6 +9,7 @@
 WebServer server(80);
 
 float temp = 0;
+float rawTemp = 0;
 float hum = 0;
 float dewpt = 0.0;
 float press = 0;
@@ -88,6 +89,7 @@ void parseWeather(String line) {
   timeStr = pad2(hh) + ":" + pad2(mm) + ":" + pad2(ss);
 
   temp  = line.substring(tPos + 5, line.indexOf(",", tPos)).toFloat();
+  rawTemp = temp;
   // During suppressing hours, REDUCE the temp by tempAdjFactor...
   if (suppressingTemp) {
     if (hh - suppressStartHour == 2) {
@@ -205,7 +207,7 @@ void uploadToWU() {
   url += "&dateutc=now";
 
   //if (!suppress) {
-  // No longer suppressing the temp.  We'll reduce it by 2% during suppression hours, above
+  // No longer suppressing the temp.  We'll reduce it by a factor during suppression hours, above
   url += "&tempf=" + String(temp, 1);
   //}
 
@@ -286,7 +288,7 @@ void setup() {
     bool suppress = suppressingTemp;
 
     page += "<div class='card'><div class='label'>Temperature</div>";
-    page += "<div class='value'>" + String(temp, 1) + " &deg;F</div>";
+    page += "<div class='value'>" + String(temp, 1) + "&deg;F &nbsp;&nbsp;&nbsp; <span class='noemph'>Raw temp: " + String(rawTemp, 1) + "&deg;F</span></div>";
 
     // No longer suppress the temp.  We'll REPORT it during suppression hours, but REDUCE it by 2% and add a '*'...
     if (suppress) {
@@ -298,7 +300,7 @@ void setup() {
     page += "</div>";
 
     page += "<div class='card'><div class='label'>Dew Point</div>";
-    page += "<div class='value'>" + String(dewpt, 1) + " &deg;F</div>";
+    page += "<div class='value'>" + String(dewpt, 1) + "&deg;F</div>";
     page += "<div class='noemph'>" + rainMessage + "</div>";
     page += "<div class='noemph'>" + String("Humidity: ") + String((int)hum) + " %</div>";
     page += "</div>";
@@ -312,7 +314,7 @@ void setup() {
 
     page += "<div class='card'>";
     page += "<div class='label'>Wind</div>";
-    page += "<div class='value'>" + String(winddir) + "° at " + String(windspeedmph, 1) + " mph&nbsp;&nbsp;&nbsp;<span class='noemph'>Last reported avg direction: " + String(avgWindDirDeg) + "</span></div>";
+    page += "<div class='value'>" + String(winddir) + "&deg; at " + String(windspeedmph, 1) + " mph&nbsp;&nbsp;&nbsp;<span class='noemph'>Last reported avg direction: " + String(avgWindDirDeg) + "&deg;</span></div>";
     page += String("<div class='noemph'>Gust ") + String(windgustmph, 1) + " mph</div>";
     page += "</div>";
 
