@@ -28,6 +28,7 @@ float rainRate = 0.0;
 float dailyrainin = 0.0;
 
 unsigned long lastWU = 0;
+unsigned long lastSuccessfulWU = 0;
 
 // Buffers
 String incomingLine = "";
@@ -228,10 +229,18 @@ void uploadToWU() {
   WiFiClient client;
   bool uploadAttempted = false;
 
-  if (client.connect("weatherstation.wunderground.com", 80)) {
-      client.print(url);
-      uploadAttempted = true;
-  }
+    if (client.connect("weatherstation.wunderground.com", 80)) {
+        client.print(url);
+        uploadAttempted = true;
+
+        lastSuccessfulWU = millis();
+
+        Serial.println("*** WU connection successful ***");
+    }
+    else {
+        Serial.println("*** WU connection FAILED ***");
+    }
+
   Serial.println();
   Serial.print("Wind samples averaged: ");
   Serial.println(windDirSamples);
@@ -264,6 +273,7 @@ void setup() {
   Serial.println("WiFi connected!");
   Serial.println(WiFi.localIP());
   WIFI_IP = WiFi.localIP().toString();
+  lastSuccessfulWU = millis();
 
   Serial.println("ESP32-S3 UART1 starting...");
   Serial1.begin(9600, SERIAL_8N1, 18, 17);
@@ -335,6 +345,28 @@ void setup() {
     page += "<div style='font-size:20px;' class='value'>" + String("Next upload time: ") + nextUploadTime + "</div>";
     page += "</div>";
 
+    unsigned long wuAgeMinutes =
+    (millis() - lastSuccessfulWU) / 60000UL;
+
+    page += "<div class='card'>";
+    page += "<div class='label'>Weather Underground</div>";
+
+    page += "<div class='noemph'>Last successful connection: ";
+    page += String(wuAgeMinutes);
+    page += " minute(s) ago</div>";
+
+    if (wuAgeMinutes < 15) {
+        page += "<div style='color:#090;font-size:20px;'>ONLINE</div>";
+    }
+    else if (wuAgeMinutes < 60) {
+        page += "<div style='color:#c60;font-size:20px;'>DEGRADED</div>";
+    }
+    else {
+        page += "<div style='color:#c00;font-size:20px;'>OFFLINE</div>";
+    }
+
+    page += "</div>";
+
     page += "</body></html>";
 
     server.send(200, "text/html", page);
@@ -394,6 +426,21 @@ void loop() {
       firstUploadDone = true;
       updateNextUploadTime();
   }
+
+    if (millis() - lastSuccessfulWU > 3600000UL)
+    {
+        Serial.println();
+        Serial.println("************************************************");
+        Serial.println("*** No successful WU connection in 1 hour ***");
+        Serial.println("*** Restarting ESP32-S3 ***");
+        Serial.println("************************************************");
+        Serial.println();
+
+        lastSuccessfulWU = millis();   // prevent immediate retrigger
+
+        delay(1000);
+        ESP.restart();
+    }
 
   // Handle web requests
   server.handleClient();
