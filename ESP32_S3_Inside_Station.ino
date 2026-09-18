@@ -324,7 +324,7 @@ void setup() {
 
     page += "<div class='card'><div class='label'>Temperature</div>";
     page += "<div class='value'>" + String(temp, 1) + "&deg;F &nbsp;&nbsp;&nbsp; <span class='noemph'>Raw temp: " + 
-         String(rawTemp, 1) + "&deg;F &nbsp;&nbsp;&nbsp; Adj factor: " + String(tempAdjFactor,2) + "</span></div>";
+         String(rawTemp, 1) + "&deg;F &nbsp;&nbsp;&nbsp; Adj factor: " + String(tempAdjFactor,3) + "</span></div>";
 
     // No longer suppress the temp.  We'll REPORT it during suppression hours, but REDUCE it by 2% and add a '*'...
     if (suppress) {
