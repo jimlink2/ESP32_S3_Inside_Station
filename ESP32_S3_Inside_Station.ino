@@ -89,21 +89,41 @@ void parseWeather(String line) {
 
   timeStr = pad2(hh) + ":" + pad2(mm) + ":" + pad2(ss);
 
-  temp  = line.substring(tPos + 5, line.indexOf(",", tPos)).toFloat();
-  rawTemp = temp;
-  // During suppressing hours, REDUCE the temp by tempAdjFactor...
-  if (suppressingTemp) {
-    if (hh - suppressStartHour == 2) {
-        tempAdjFactor = 0.98;
-    } else if (hh - suppressStartHour == 1) {
-        tempAdjFactor = 0.99;
-    } else {
-        tempAdjFactor = 0.995;
+    temp  = line.substring(tPos + 5, line.indexOf(",", tPos)).toFloat();
+    rawTemp = temp;
+
+    // During suppressing hours, gradually reduce the reported
+    // temperature. Small adjustment at the beginning, maximum
+    // adjustment in the middle, then taper back to normal.
+    if (suppressingTemp)
+    {
+        int startMin = suppressStartHour * 60 + suppressStartMinute;
+        int endMin   = suppressEndHour * 60 + suppressEndMinute;
+        int nowMin   = hh * 60 + mm;
+
+        // 0.0 at start, 1.0 at end
+        float progress =
+            (float)(nowMin - startMin) /
+            (float)(endMin - startMin);
+
+        // Maximum reduction is 1.5%
+        float peakReduction = 0.015;
+
+        // Creates a smooth hump:
+        // start = 0%
+        // middle = 1.5%
+        // end = 0%
+        float reduction =
+            peakReduction * sin(progress * PI);
+
+        tempAdjFactor = 1.0 - reduction;
     }
-  } else {
-    tempAdjFactor = 1.0;
-  }
-  temp = temp * tempAdjFactor;
+    else
+    {
+        tempAdjFactor = 1.0;
+    }
+
+    temp *= tempAdjFactor;
 
   hum   = line.substring(hPos + 4, line.indexOf(",", hPos)).toFloat();
   press = line.substring(pPos + 6, line.indexOf(",", pPos)).toFloat();
@@ -303,7 +323,8 @@ void setup() {
     bool suppress = suppressingTemp;
 
     page += "<div class='card'><div class='label'>Temperature</div>";
-    page += "<div class='value'>" + String(temp, 1) + "&deg;F &nbsp;&nbsp;&nbsp; <span class='noemph'>Raw temp: " + String(rawTemp, 1) + "&deg;F</span></div>";
+    page += "<div class='value'>" + String(temp, 1) + "&deg;F &nbsp;&nbsp;&nbsp; <span class='noemph'>Raw temp: " + 
+         String(rawTemp, 1) + "&deg;F &nbsp;&nbsp;&nbsp; Adj factor: " + String(tempAdjFactor,2) + "</span></div>";
 
     // No longer suppress the temp.  We'll REPORT it during suppression hours, but REDUCE it by 2% and add a '*'...
     if (suppress) {
