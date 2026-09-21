@@ -130,31 +130,28 @@ void parseWeather(String line) {
   tmin  = line.substring(nPos + 5, line.indexOf(",", nPos)).toFloat();
   tmax  = line.substring(xPos + 5, line.indexOf(",", xPos)).toFloat();
 
-  if (dewpt < 40) {
-      rainMessage = "Air is bone-dry. Rain is virtually impossible.";
-  }
-  else if (dewpt < 50) {
-      rainMessage = "Moisture very low. Rain highly unlikely.";
-  }
-  else if (dewpt < 55) {
-      rainMessage = "Moisture insufficient for rain unless strong lift arrives.";
-  }
-  else if (dewpt < 60) {
-      rainMessage = "Rain possible if a front or disturbance arrives.";
-  }
-  else if (dewpt < 65) {
-      rainMessage = "Moisture supportive of rain with typical lift.";
-  }
-  else if (dewpt < 70) {
-      rainMessage = "High moisture — rain likely with any disturbance.";
-  }
-  else if (dewpt < 75) {
-      rainMessage = "Very high moisture — rain or storms likely.";
-  }
-  else {
-      rainMessage = "Extreme moisture — heavy rain or storms likely.";
-  }
-
+    if (dewpt < 40) {
+        rainMessage = "Very dry atmosphere";
+    }
+    else if (dewpt < 50) {
+        rainMessage = "Dry atmosphere";
+    }
+    else if (dewpt < 60) {
+        rainMessage = "Comfortable moisture level";
+    }
+    else if (dewpt < 65) {
+        rainMessage = "Noticeably humid";
+    }
+    else if (dewpt < 70) {
+        rainMessage = "Humid air";
+    }
+    else if (dewpt < 75) {
+        rainMessage = "Very humid air";
+    }
+    else {
+        rainMessage = "Tropical-level humidity";
+    }
+    
   // ----- WIND & RAIN -----
 
   // WIND SPEED
