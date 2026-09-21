@@ -35,8 +35,8 @@ String incomingLine = "";
 String latestWeather = "";
 String WIFI_IP = "";
 String nextUploadTime = "Unknown";
-String rainMessage = "";
-
+String moistureMessage = "";
+String dewMessage = "";
 const int suppressStartHour = 15;
 const int suppressStartMinute = 0;
 const int suppressEndHour = 20;
@@ -44,7 +44,7 @@ const int suppressEndMinute = 0;
 
 float tempAdjFactor = 1.0;
 // Maximum reduction
-float peakReduction = 0.03;
+float peakReduction = 0.02;
 
 
 bool suppressingTemp = false;   // MEGA controls suppression
@@ -130,28 +130,50 @@ void parseWeather(String line) {
   tmin  = line.substring(nPos + 5, line.indexOf(",", nPos)).toFloat();
   tmax  = line.substring(xPos + 5, line.indexOf(",", xPos)).toFloat();
 
+    // Atmospheric moisture content based on dew point
     if (dewpt < 40) {
-        rainMessage = "Very dry atmosphere";
+        moistureMessage = "Very low";
     }
     else if (dewpt < 50) {
-        rainMessage = "Dry atmosphere";
+        moistureMessage = "Low";
     }
     else if (dewpt < 60) {
-        rainMessage = "Comfortable moisture level";
+        moistureMessage = "Moderate";
     }
     else if (dewpt < 65) {
-        rainMessage = "Noticeably humid";
+        moistureMessage = "Elevated";
     }
     else if (dewpt < 70) {
-        rainMessage = "Humid air";
+        moistureMessage = "High";
     }
     else if (dewpt < 75) {
-        rainMessage = "Very humid air";
+        moistureMessage = "Very high";
     }
     else {
-        rainMessage = "Tropical-level humidity";
+        moistureMessage = "Extreme";
     }
-    
+
+    float dewSpread = temp - dewpt;
+
+    if (dewSpread > 25) {
+        dewMessage = "Are you kidding?";
+    }
+    else if (dewSpread > 15) {
+        dewMessage = "Not even close";
+    }
+    else if (dewSpread > 10) {
+        dewMessage = "Dew unlikely";
+    }
+    else if (dewSpread > 5) {
+        dewMessage = "Dew possible";
+    }
+    else if (dewSpread > 2) {
+        dewMessage = "Dew likely";
+    }
+    else {
+        dewMessage = "Dew or fog imminent";
+    }   
+
   // ----- WIND & RAIN -----
 
   // WIND SPEED
@@ -334,8 +356,8 @@ void setup() {
 
     page += "<div class='card'><div class='label'>Dew Point</div>";
     page += "<div class='value'>" + String(dewpt, 1) + "&deg;F</div>";
-    page += "<div class='noemph'>" + rainMessage + "</div>";
     page += "<div class='noemph'>" + String("Humidity: ") + String((int)hum) + " %</div>";
+    page += "<div class='noemph'>Moisture content: " + moistureMessage + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Dew potential: " + dewMessage + "</div>";
     page += "</div>";
 
     float baromin = press * 0.02953;  // convert hPa → inHg
