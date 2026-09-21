@@ -37,12 +37,15 @@ String WIFI_IP = "";
 String nextUploadTime = "Unknown";
 String rainMessage = "";
 
-const int suppressStartHour = 16;
+const int suppressStartHour = 15;
 const int suppressStartMinute = 0;
-const int suppressEndHour = 19;
+const int suppressEndHour = 20;
 const int suppressEndMinute = 0;
 
 float tempAdjFactor = 1.0;
+// Maximum reduction
+float peakReduction = 0.03;
+
 
 bool suppressingTemp = false;   // MEGA controls suppression
 bool haveValidData = false;
@@ -105,9 +108,6 @@ void parseWeather(String line) {
         float progress =
             (float)(nowMin - startMin) /
             (float)(endMin - startMin);
-
-        // Maximum reduction
-        float peakReduction = 0.03;
 
         // Creates a smooth hump:
         // start = 0%
