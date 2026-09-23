@@ -4,6 +4,9 @@
 // Use COM12 or COM11 to monitor the serial data from the Arduino sensors
 #include <WiFi.h>
 #include <WebServer.h>
+#include <HTTPClient.h>
+#include <WiFiClientSecure.h>
+
 #include "S3_secrets.h"
 
 WebServer server(80);
@@ -26,7 +29,8 @@ int avgWindDirDeg = 0;
 float rainin = 0.0;
 float rainRate = 0.0;
 float dailyrainin = 0.0;
-
+int moistCode = 0;
+int dewCode = 0;
 unsigned long lastWU = 0;
 unsigned long lastSuccessfulWU = 0;
 
@@ -133,46 +137,59 @@ void parseWeather(String line) {
     // Atmospheric moisture content based on dew point
     if (dewpt < 40) {
         moistureMessage = "Very low";
+        moistCode = 0;
     }
     else if (dewpt < 50) {
         moistureMessage = "Low";
+        moistCode = 1;
     }
     else if (dewpt < 60) {
         moistureMessage = "Moderate";
+        moistCode = 2;
     }
     else if (dewpt < 65) {
         moistureMessage = "Elevated";
+        moistCode = 3;
     }
     else if (dewpt < 70) {
         moistureMessage = "High";
+        moistCode = 4;
     }
     else if (dewpt < 75) {
         moistureMessage = "Very high";
+        moistCode = 5;
     }
     else {
         moistureMessage = "Extreme";
+        moistCode = 6;
     }
 
     float dewSpread = temp - dewpt;
 
     if (dewSpread > 25) {
         dewMessage = "Are you kidding?";
+        dewCode = 0;
     }
     else if (dewSpread > 15) {
         dewMessage = "Not even close";
+        dewCode = 1;
     }
     else if (dewSpread > 10) {
         dewMessage = "Dew unlikely";
+        dewCode = 2;
     }
     else if (dewSpread > 5) {
         dewMessage = "Dew possible";
+        dewCode = 3;
     }
     else if (dewSpread > 2) {
         dewMessage = "Dew likely";
+        dewCode = 4;
     }
     else {
         dewMessage = "Dew or fog imminent";
-    }   
+        dewCode = 5;
+    }
 
   // ----- WIND & RAIN -----
 
@@ -300,6 +317,72 @@ void uploadToWU() {
   //Serial.print(suppress ? "SUPPRESSED" : "SENT");
   Serial.println(")");
   Serial.print(url);
+}
+
+void uploadToGoDaddy()
+{
+    unsigned long wuAgeMinutes =
+        (millis() - lastSuccessfulWU) / 60000UL;
+
+    int wuCode;
+
+    if (wuAgeMinutes < 15)
+        wuCode = 0;      // ONLINE
+    else if (wuAgeMinutes < 60)
+        wuCode = 1;      // DEGRADED
+    else
+        wuCode = 2;      // OFFLINE
+
+    float baromin = press * 0.02953;
+
+    String url =
+        "https://jimlink.net/Weather/weatherdb.php?";
+
+    url += "temp=" + String(temp,1);
+    url += "&rawtemp=" + String(rawTemp,1);
+    url += "&adjfactor=" + String(tempAdjFactor,3);
+
+    url += "&dewpt=" + String(dewpt,1);
+    url += "&humidity=" + String((int)hum);
+
+    url += "&moist=" + String(moistCode);
+    url += "&dewpot=" + String(dewCode);
+
+    url += "&presshpa=" + String(press,1);
+    url += "&pressinhg=" + String(baromin,2);
+
+    url += "&winddir=" + String(winddir);
+    url += "&windspd=" + String(windspeedmph,1);
+    url += "&windlast=" + String(avgWindDirDeg);
+    url += "&windgust=" + String(windgustmph,1);
+
+    url += "&rainrate=" + String(rainRate,2);
+    url += "&rainday=" + String(dailyrainin,2);
+
+    url += "&time=" + timeStr;
+    url += "&nextupl=" + nextUploadTime;
+
+    url += "&lastconn=" + String(wuAgeMinutes);
+    url += "&WUstat=" + String(wuCode);
+
+    Serial.println();
+    Serial.println("*** GoDaddy Upload ***");
+    Serial.println(url);
+    Serial.println();
+
+    WiFiClientSecure client;
+    client.setInsecure();
+
+    HTTPClient http;
+
+    http.begin(client, url);
+
+    int httpCode = http.GET();
+
+    Serial.print("GoDaddy HTTP Code = ");
+    Serial.println(httpCode);
+
+    http.end();
 }
 
 void setup() {
@@ -464,13 +547,14 @@ void loop() {
       }
   }
 
-  // ⭐ FORCE BOOT-TIME UPLOAD ONCE WE HAVE DATA AND WIFI IS READY
-  if (!firstUploadDone && haveValidData && WiFi.status() == WL_CONNECTED) {
-      uploadToWU();
-      lastWU = millis();
-      firstUploadDone = true;
-      updateNextUploadTime();
-  }
+    // ⭐ FORCE BOOT-TIME UPLOAD ONCE WE HAVE DATA AND WIFI IS READY
+    if (!firstUploadDone && haveValidData && WiFi.status() == WL_CONNECTED) {
+        uploadToWU();
+        lastWU = millis();
+        firstUploadDone = true;
+        updateNextUploadTime();
+        uploadToGoDaddy();
+    }
 
     if (millis() - lastSuccessfulWU > 3600000UL)
     {
@@ -492,9 +576,10 @@ void loop() {
 
   // Upload to Weather Underground every 5 minutes
   if (haveValidData && millis() - lastWU > 300000) {  // 300000 ms = 5 minutes
-      uploadToWU();
-      lastWU = millis();
-      updateNextUploadTime();
+    uploadToWU();
+    lastWU = millis();
+    updateNextUploadTime();
+    uploadToGoDaddy();
   }
 
   // Heartbeat
