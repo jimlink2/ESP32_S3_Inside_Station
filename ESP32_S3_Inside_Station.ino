@@ -29,6 +29,8 @@ int avgWindDirDeg = 0;
 float rainin = 0.0;
 float rainRate = 0.0;
 float dailyrainin = 0.0;
+uint32_t rainTips = 0;
+uint32_t outdoorUptimeSec = 0;
 int moistCode = 0;
 int dewCode = 0;
 unsigned long lastWU = 0;
@@ -67,15 +69,16 @@ void parseWeather(String line) {
   int pPos = line.indexOf("PRESS:");
   int nPos = line.indexOf("TMIN:");
   int xPos = line.indexOf("TMAX:");
-  int timePos = line.indexOf("TIME:");
+  int timePos = line.indexOf(",TIME:");
   int wsPos = line.indexOf("WINDSPD:");
   int wdPos = line.indexOf("WINDDIR:");
   int rPos  = line.indexOf("RAIN:");
   int rrPos = line.indexOf("RAINRATE:");
-  int drPos = line.indexOf("DAILYRAIN:");
-  int gPos = line.indexOf("GUST:");
-  int sPos = line.indexOf("SUPP:");
-
+    int drPos = line.indexOf("DAILYRAIN:");
+    int rtPos = line.indexOf("RAINTIPS:");
+    int upPos = line.indexOf("OUTUPTIME:");
+    int gPos = line.indexOf("GUST:");
+    int sPos = line.indexOf("SUPP:");
   if (dewPos >= 0) {
     dewpt = line.substring(dewPos + 4, line.indexOf(",", dewPos)).toFloat();
   }
@@ -84,18 +87,27 @@ void parseWeather(String line) {
       suppressingTemp = line.substring(sPos + 5).toInt() == 1;
   }
 
+    // ----- TIME -----
+    int hh = 0;
+    int mm = 0;
+    int ss = 0;
 
-  // ----- TIME -----
-  String rawTime = line.substring(timePos + 5);  // "7:3:9"
-  int first = rawTime.indexOf(':');
-  int second = rawTime.indexOf(':', first + 1);
+    if (timePos >= 0)
+    {
+        String rawTime = line.substring(timePos + 6);
 
-  int hh = rawTime.substring(0, first).toInt();
-  int mm = rawTime.substring(first + 1, second).toInt();
-  int ss = rawTime.substring(second + 1).toInt();
+        int first = rawTime.indexOf(':');
+        int second = rawTime.indexOf(':', first + 1);
 
-  timeStr = pad2(hh) + ":" + pad2(mm) + ":" + pad2(ss);
+        if (first >= 0 && second >= 0)
+        {
+            hh = rawTime.substring(0, first).toInt();
+            mm = rawTime.substring(first + 1, second).toInt();
+            ss = rawTime.substring(second + 1).toInt();
 
+            timeStr = pad2(hh) + ":" + pad2(mm) + ":" + pad2(ss);
+        }
+    }
     temp  = line.substring(tPos + 5, line.indexOf(",", tPos)).toFloat();
     rawTemp = temp;
 
@@ -237,12 +249,32 @@ void parseWeather(String line) {
       rainRate = 0.0;      // fallback
   }
 
-  // DAILY RAIN
-  if (drPos >= 0) {
-      dailyrainin = line.substring(drPos + 10).toFloat();
-  } else {
-      dailyrainin = 0.0;   // fallback
-  }
+    // DAILY RAIN
+    if (drPos >= 0) {
+        dailyrainin =
+            line.substring(drPos + 10,
+                        line.indexOf(",", drPos)).toFloat();
+    } else {
+        dailyrainin = 0.0;
+    }
+
+    // RAIN TIP COUNT
+    if (rtPos >= 0) {
+        rainTips =
+            line.substring(rtPos + 9,
+                        line.indexOf(",", rtPos)).toInt();
+    } else {
+        rainTips = 0;
+    }
+
+    // OUTDOOR C3 UPTIME
+    if (upPos >= 0) {
+        outdoorUptimeSec =
+            line.substring(upPos + 10,
+                        line.indexOf(",", upPos)).toInt();
+    } else {
+        outdoorUptimeSec = 0;
+    }
 }
 
 void uploadToWU() {
@@ -359,6 +391,9 @@ void uploadToGoDaddy()
     url += "&rainrate=" + String(rainRate,2);
     url += "&rainday=" + String(dailyrainin,2);
 
+    url += "&raintips=" + String(rainTips);
+    url += "&outuptime=" + String(outdoorUptimeSec);
+
     url += "&time=" + timeStr;
     url += "&nextupl=" + nextUploadTime;
 
@@ -466,6 +501,53 @@ void setup() {
     page += "<div class='value'>Day: ";
     page += String(dailyrainin, 2);
     page += " in</div>";
+    page += "<div class='noemph'>";
+    page += "Rain gauge tips: ";
+    page += String(rainTips);
+    page += "</div>";
+
+    page += "</div>";
+
+    // ----- OUTDOOR STATION -----
+
+    uint32_t up = outdoorUptimeSec;
+
+    uint32_t days = up / 86400;
+    uint32_t hours = (up % 86400) / 3600;
+    uint32_t minutes = (up % 3600) / 60;
+    uint32_t seconds = up % 60;
+
+    String uptimeDisplay = "";
+
+    if (days > 0) {
+        uptimeDisplay += String(days) + "d ";
+    }
+
+    if (hours > 0 || days > 0) {
+        uptimeDisplay += String(hours) + "h ";
+    }
+
+    uptimeDisplay += String(minutes) + "m ";
+    uptimeDisplay += String(seconds) + "s";
+
+    page += "<div class='card'>";
+    page += "<div class='label'>Outdoor Station</div>";
+
+    page += "<div class='noemph'>";
+    page += "C3 uptime: ";
+    page += uptimeDisplay;
+    page += "</div>";
+
+    page += "<div class='noemph'>";
+    page += "Uptime seconds: ";
+    page += String(outdoorUptimeSec);
+    page += "</div>";
+
+    page += "<div class='noemph'>";
+    page += "Rain gauge tips: ";
+    page += String(rainTips);
+    page += "</div>";
+
     page += "</div>";
 
     page += "<div class='card'><div class='label'>Time</div>";
