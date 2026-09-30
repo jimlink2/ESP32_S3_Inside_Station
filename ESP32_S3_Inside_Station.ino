@@ -475,15 +475,15 @@ void setup() {
     bool suppress = suppressingTemp;
 
     page += "<div class='card'><div class='label'>Temperature</div>";
-    page += "<div class='value'>" + String(temp, 1) + "&deg;F &nbsp;&nbsp;&nbsp; <span class='noemph'>Raw temp: " + 
-         String(rawTemp, 1) + "&deg;F &nbsp;&nbsp;&nbsp; Adj factor: " + String(tempAdjFactor,3) + "</span></div>";
+    page += "<div class='value'>" + String(rawTemp, 1) + "&deg;F &nbsp;&nbsp;&nbsp; <span class='noemph'>Uploaded temp: " + 
+         String(temp, 1) + "&deg;F &nbsp;&nbsp;&nbsp; Adj factor: " + String(tempAdjFactor,3) + "</span></div>";
 
-    // No longer suppress the temp.  We'll REPORT it during suppression hours, but REDUCE it by 2% and add a '*'...
+    // No longer suppress the temp.  We'll REPORT it during suppression hours, but REDUCE it and add a '*'...
     if (suppress) {
         //page += "<div style='font-size:20px; color:#c00; margin-top:2px;'>TEMP UPLOAD SUPPRESSED</div>";
-        page += "<div style='font-size:20px; color:#090; margin-top:2px;'>TEMP UPLOAD ACTIVE *</div>";
+        //page += "<div style='font-size:20px; color:#090; margin-top:2px;'>TEMP UPLOAD ACTIVE *</div>";
     } else {
-        page += "<div style='font-size:20px; color:#090; margin-top:2px;'>TEMP UPLOAD ACTIVE</div>";
+        //page += "<div style='font-size:20px; color:#090; margin-top:2px;'>TEMP UPLOAD ACTIVE</div>";
     }
     page += "</div>";
 
