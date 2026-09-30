@@ -489,8 +489,8 @@ void setup() {
 
     page += "<div class='card'><div class='label'>Dew Point</div>";
     page += "<div class='value'>" + String(dewpt, 1) + "&deg;F</div>";
-    page += "<div class='noemph'>" + String("Humidity: ") + String((int)hum) + " %</div>";
     page += "<div class='noemph'>Moisture content: " + moistureMessage + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Dew potential: " + dewMessage + "</div>";
+    page += "<div class='noemph'>" + String("Humidity: ") + String((int)hum) + " %</div>";
     page += "</div>";
 
     float baromin = press * 0.02953;  // convert hPa → inHg
