@@ -19,6 +19,7 @@ float press = 0;
 float tmin = 0;
 float tmax = 0;
 String timeStr = "";
+String dateStr = "";
 float windspeedmph = 0.0;
 float windgustmph = 0.0;
 int winddir = 0;
@@ -70,6 +71,7 @@ void parseWeather(String line) {
   int nPos = line.indexOf("TMIN:");
   int xPos = line.indexOf("TMAX:");
   int timePos = line.indexOf(",TIME:");
+  int datePos = line.indexOf(",DATE:");
   int wsPos = line.indexOf("WINDSPD:");
   int wdPos = line.indexOf("WINDDIR:");
   int rPos  = line.indexOf("RAIN:");
@@ -86,6 +88,18 @@ void parseWeather(String line) {
   if (sPos >= 0) {
       suppressingTemp = line.substring(sPos + 5).toInt() == 1;
   }
+
+    // ----- DATE -----
+    if (datePos >= 0)
+    {
+        int dateStart = datePos + 6;
+        int dateEnd = line.indexOf(",", dateStart);
+
+        if (dateEnd > dateStart)
+        {
+            dateStr = line.substring(dateStart, dateEnd);
+        }
+    }
 
     // ----- TIME -----
     int hh = 0;
@@ -394,6 +408,7 @@ void uploadToGoDaddy()
     url += "&raintips=" + String(rainTips);
     url += "&outuptime=" + String(outdoorUptimeSec);
 
+    url += "&date=" + dateStr;
     url += "&time=" + timeStr;
     url += "&nextupl=" + nextUploadTime;
 
