@@ -512,10 +512,6 @@ void setup() {
     page += "<div class='value'>Day: ";
     page += String(dailyrainin, 2);
     page += " in</div>";
-    page += "<div class='noemph'>";
-    page += "Rain gauge tips: ";
-    page += String(rainTips);
-    page += "</div>";
 
     page += "</div>";
 
@@ -552,6 +548,11 @@ void setup() {
     page += "<div class='noemph'>";
     page += "Uptime seconds: ";
     page += String(outdoorUptimeSec);
+    page += "</div>";
+    
+    page += "<div class='noemph'>";
+    page += "Rain gauge tips: ";
+    page += String(rainTips);
     page += "</div>";
 
     page += "</div>";
