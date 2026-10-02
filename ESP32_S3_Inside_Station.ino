@@ -435,6 +435,16 @@ void uploadToGoDaddy()
     http.end();
 }
 
+String commaNumber(uint32_t value) {
+    String s = String(value);
+
+    for (int i = s.length() - 3; i > 0; i -= 3) {
+        s = s.substring(0, i) + "," + s.substring(i);
+    }
+
+    return s;
+}
+
 void setup() {
   Serial.begin(115200);
   delay(500);
@@ -543,11 +553,9 @@ void setup() {
     page += "<div class='noemph'>";
     page += "C3 uptime: ";
     page += uptimeDisplay;
-    page += "</div>";
-
-    page += "<div class='noemph'>";
-    page += "Uptime seconds: ";
-    page += String(outdoorUptimeSec);
+    page += " (";
+    page += commaNumber(outdoorUptimeSec);
+    page += " seconds)";
     page += "</div>";
     
     page += "<div class='noemph'>";
