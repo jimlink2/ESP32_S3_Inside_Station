@@ -492,8 +492,8 @@ void setup() {
     float baromin = press * 0.02953;  // convert hPa → inHg
 
     page += "<div class='card'><div class='label'>Pressure</div>";
-    page += "<div class='noemph'>" + String(press, 1) + " hPa</div>";
     page += "<div class='value'>" + String(baromin, 2) + " inHg</div>";
+    page += "<div class='noemph'>" + String(press, 1) + " hPa</div>";
     page += "</div>";
 
     page += "<div class='card'>";
@@ -504,14 +504,14 @@ void setup() {
 
     page += "<div class='card'>";
     page += "<div class='label'>Rain</div>";
-    // Rain rate (in/hr)
-    page += "<div class='value'>Rate: ";
-    page += String(rainRate, 2);
-    page += " in/hr</div>";
     // Daily total
     page += "<div class='value'>Day: ";
     page += String(dailyrainin, 2);
     page += " in</div>";
+    // Rain rate (in/hr)
+    page += "<div class='noemph'>Rate: ";
+    page += String(rainRate, 2);
+    page += " in/hr</div>";
 
     page += "</div>";
 
@@ -559,7 +559,7 @@ void setup() {
 
     page += "<div class='card'><div class='label'>Time</div>";
     page += "<div class='value'>" + timeStr + "</div>";
-    page += "<div style='font-size:20px;' class='value'>" + String("Next upload time: ") + nextUploadTime + "</div>";
+    page += "<div style='font-size:20px;' class='noemph'>" + String("Next upload time: ") + nextUploadTime + "</div>";
     page += "</div>";
 
     unsigned long wuAgeMinutes =
